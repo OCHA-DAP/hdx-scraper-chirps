@@ -1,0 +1,18 @@
+base_url: # store these with the latest data added below
+  marmay: "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/fews/web/africa/east/pentadal/chirps/seasaccum/marmay/anom/lta/downloads/pentadal/"
+
+output:
+  dataset: "east-africa-chirps-seasonal-rainfall-accumulation-anomaly-by-pentad"
+  mapbox:
+    ETH:
+      name: "eth_chirps-582ypp"
+      mapid: "humdata.9f35wnzq"
+    KEN:
+      name: "ken_chirps-8xn2th"
+      mapid: "humdata.0zdu5z45"
+    SOM:
+      name: "som_chirps-0uyngi"
+      mapid: "humdata.1bl7k2zs"
+
+boundaries:
+  dataset: "unmap-international-boundaries-geojson"
