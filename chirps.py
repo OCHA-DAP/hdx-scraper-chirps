@@ -93,8 +93,8 @@ def generate_mapbox_data(path, boundary_dataset, countries, folder):
     return rendered_rasters
 
 
-def upload_to_mapbox(mapid, name, file_to_upload, mapbox_auth):
-    service = Uploader(access_token=mapbox_auth)
+def upload_to_mapbox(mapid, name, file_to_upload, mapbox_key):
+    service = Uploader(access_token=mapbox_key)
     with open(file_to_upload, 'rb') as src:
         upload_resp = service.upload(src, mapid, name=name)
     if upload_resp.status_code == 422:

@@ -20,12 +20,15 @@ def parse_args():
     parser.add_argument("-ua", "--user_agent", default=None, help="user agent")
     parser.add_argument("-pp", "--preprefix", default=None, help="preprefix")
     parser.add_argument("-hs", "--hdx_site", default=None, help="HDX site to use")
-    parser.add_argument("-ma", "--mapbox_auth", default=None, help="Credentials for accessing MapBox data")
+    parser.add_argument("-mk", "--mapbox_key", default=None, help="Credentials for accessing MapBox data")
     args = parser.parse_args()
     return args
 
 
-def main(**ignore):
+def main(
+    mapbox_key,
+    **ignore,
+):
     configuration = Configuration.read()
     countries = [c for c in configuration["output"]["mapbox"]]
 
@@ -74,7 +77,7 @@ def main(**ignore):
                     configuration["output"]["mapbox"][country]["mapid"],
                     configuration["output"]["mapbox"][country]["name"],
                     rasters[country],
-                    mapbox_auth,
+                    mapbox_key,
                 )
 
 
@@ -89,9 +92,9 @@ if __name__ == "__main__":
     preprefix = args.preprefix
     if preprefix is None:
         preprefix = getenv("PREPREFIX")
-    mapbox_auth = args.mapbox_auth
-    if mapbox_auth is None:
-        mapbox_auth = getenv("MAPBOX_AUTH", None)
+    mapbox_key = args.mapbox_key
+    if mapbox_key is None:
+        mapbox_key = getenv("MAPBOX_KEY", None)
     facade(
         main,
         hdx_key=hdx_key,
@@ -101,5 +104,5 @@ if __name__ == "__main__":
         user_agent_lookup=lookup,
         preprefix=preprefix,
         project_config_yaml=join("config", "project_configuration.yml"),
-        mapbox_auth=mapbox_auth,
+        mapbox_key=mapbox_key,
     )
