@@ -41,22 +41,19 @@ def main(
                 link = get_latest_data(base_urls[period], downloader)
                 latest_data[period] = link
 
-            logger.info("Generating resources")
-            dataset = update_dataset(configuration["output"]["dataset"], latest_data)
-            # if dataset:
-            #     dataset.update_in_hdx(
-            #         hxl_update=False,
-            #         updated_by_script="HDX Scraper: CHIRPS",
-            #     )
+            logger.info("Generating CHIRPS resources")
+            dataset = add_chirps_to_dataset(configuration["output"]["dataset"], latest_data)
 
             logger.info("Summarizing data subnationally")
-            dataset = summarize_data(
+            raster, dataset = summarize_data(
                 downloader,
                 latest_data[period],
-                configuration["output"]["dataset"],
+                configuration["boundaries"]["dataset"],
+                dataset,
                 countries,
                 temp_folder,
             )
+            logger.info("Updating HDX")
             if dataset:
                 dataset.update_in_hdx(
                     hxl_update=False,
@@ -65,9 +62,10 @@ def main(
 
             logger.info("Preparing rasters for mapbox")
             rasters = generate_mapbox_data(
-                downloader,
-                latest_data[period],
+                raster,
                 configuration["boundaries"]["dataset"],
+                countries,
+                configuration["legend"],
                 temp_folder,
             )
 
