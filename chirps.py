@@ -70,12 +70,13 @@ def add_chirps_to_dataset(dataset_name, latest_data):
         resource = Resource(resource_data)
         new_resources.append(resource)
     if len(new_resources) == 0:
-        return dataset
+        return dataset, False
     try:
         dataset.add_update_resources(new_resources)
     except HDXError as ex:
         logger.error(f"Resources could not be added. Error: {ex}")
-    return dataset
+        return dataset, False
+    return dataset, True
 
 
 def summarize_data(downloader, url, boundary_dataset, dataset, countries, folder):

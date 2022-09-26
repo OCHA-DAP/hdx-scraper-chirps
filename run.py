@@ -42,41 +42,42 @@ def main(
                 latest_data[period] = link
 
             logger.info("Generating CHIRPS resources")
-            dataset = add_chirps_to_dataset(configuration["output"]["dataset"], latest_data)
+            dataset, updated = add_chirps_to_dataset(configuration["output"]["dataset"], latest_data)
 
-            logger.info("Summarizing data subnationally")
-            raster, dataset = summarize_data(
-                downloader,
-                latest_data[period],
-                configuration["boundaries"]["dataset"],
-                dataset,
-                countries,
-                temp_folder,
-            )
-            logger.info("Updating HDX")
-            if dataset:
-                dataset.update_in_hdx(
-                    hxl_update=False,
-                    updated_by_script="HDX Scraper: CHIRPS",
+            if updated:
+                logger.info("Summarizing data subnationally")
+                raster, dataset = summarize_data(
+                    downloader,
+                    latest_data[period],
+                    configuration["boundaries"]["dataset"],
+                    dataset,
+                    countries,
+                    temp_folder,
+                )
+                logger.info("Updating HDX")
+                if dataset:
+                    dataset.update_in_hdx(
+                        hxl_update=False,
+                        updated_by_script="HDX Scraper: CHIRPS",
+                    )
+
+                logger.info("Preparing rasters for mapbox")
+                rasters = generate_mapbox_data(
+                    raster,
+                    configuration["boundaries"]["dataset"],
+                    countries,
+                    configuration["legend"],
+                    temp_folder,
                 )
 
-            logger.info("Preparing rasters for mapbox")
-            rasters = generate_mapbox_data(
-                raster,
-                configuration["boundaries"]["dataset"],
-                countries,
-                configuration["legend"],
-                temp_folder,
-            )
-
-            logger.info("Uploading rasters to mapbox")
-            for country in rasters:
-                upload_to_mapbox(
-                    configuration["output"]["mapbox"][country]["mapid"],
-                    configuration["output"]["mapbox"][country]["name"],
-                    rasters[country],
-                    mapbox_key,
-                )
+                logger.info("Uploading rasters to mapbox")
+                for country in rasters:
+                    upload_to_mapbox(
+                        configuration["output"]["mapbox"][country]["mapid"],
+                        configuration["output"]["mapbox"][country]["name"],
+                        rasters[country],
+                        mapbox_key,
+                    )
 
 
 if __name__ == "__main__":
