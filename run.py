@@ -41,8 +41,11 @@ def main(
                 link = get_latest_data(base_urls[period], downloader)
                 latest_data[period] = link
 
-            logger.info("Generating CHIRPS resources")
+            logger.info("Generating tif resources")
             dataset, updated = add_chirps_to_dataset(configuration["output"]["dataset"], latest_data)
+
+            if not updated:
+                logger.info("No new data found, will try again tomorrow")
 
             if updated:
                 logger.info("Summarizing data subnationally")
