@@ -34,15 +34,16 @@ def main(
 
     with temp_dir(folder="TempCHIRPS") as temp_folder:
         with Download(rate_limit={"calls": 1, "period": 0.1}) as downloader:
+
             logger.info("Finding latest available data")
-            base_urls = configuration["base_url"]
-            latest_data = dict()
-            for period in base_urls:
-                link = get_latest_data(base_urls[period], downloader)
-                latest_data[period] = link
+            latest_data = get_latest_data(configuration["base_url"], downloader)
+            if not latest_data:
+                return
 
             logger.info("Generating tif resources")
-            dataset, updated = add_chirps_to_dataset(configuration["output"]["dataset"], latest_data)
+            dataset, updated = add_chirps_to_dataset(configuration["output"]["dataset"],
+                                                     latest_data,
+                                                     configuration["output"]["resource_desc"])
 
             if not updated:
                 logger.info("No new data found, will try again tomorrow")
@@ -51,7 +52,7 @@ def main(
                 logger.info("Summarizing data subnationally")
                 raster, dataset = summarize_data(
                     downloader,
-                    latest_data[period],
+                    latest_data,
                     configuration["boundaries"]["dataset"],
                     dataset,
                     countries,

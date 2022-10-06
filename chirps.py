@@ -1,6 +1,8 @@
 import logging
 
 from bs4 import BeautifulSoup
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from geopandas import read_file
 from mapbox import Uploader
 from numpy import zeros
@@ -44,39 +46,51 @@ def get_latest_data(base_url, downloader):
     return latest_url
 
 
-def add_chirps_to_dataset(dataset_name, latest_data):
+def add_chirps_to_dataset(dataset_name, latest_data, resource_desc):
+    updated = False
     dataset = Dataset.read_from_hdx(dataset_name)
-    resources = dataset.get_resources()
-    resource_names = [r["name"] for r in resources]
-    new_resources = list()
-    for period in latest_data:
-        resource_name = latest_data[period].split("/")[-1].split(".")[0]
-        if resource_name in resource_names:
-            continue
-        resource_desc = None
-        pentad = resource_name.split("_")[-2][-2:]
-        if period == "marmay":
-            resource_desc = f"March to May 2022 (Mar pentad 1 thru May Pentad 6) - Average(1981-2010)\n" \
-                            f"Pentad: {pentad}"
-        if period == "octdec":
-            resource_desc = f"October to December 2022 (Oct pentad 1 thru Dec Pentad 6) - Average(1981-2010)\n" \
-                            f"Pentad: {pentad}"
+    resources = [r for r in dataset.get_resources() if r.get_file_type() == "geotiff"]
+    resource_name = latest_data.split("/")[-1].split(".")[0]
+    if resource_name in [r["name"] for r in resources]:
+        return dataset, False
+    pentad = resource_name.split("_")[-2][-2:]
+    resource_desc = resource_desc + pentad
+
+    if len(resources) == 0:
+        updated = True
         resource_data = {
             "name": resource_name,
             "description": resource_desc,
-            "url": latest_data[period],
+            "url": latest_data,
             "format": "GeoTIFF",
         }
-        resource = Resource(resource_data)
-        new_resources.append(resource)
-    if len(new_resources) == 0:
-        return dataset, False
+        resources.append(Resource(resource_data))
+    elif resources[0]["url"] != latest_data:
+        updated = True
+        resources[0]["name"] = resource_name
+        resources[0]["description"] = resource_desc
+        resources[0]["url"] = latest_data
+
+    if not updated:
+        return dataset, updated
+
+    year = int(resource_name.split("_")[-2][:-2])
+    month = (int(pentad) - 1) // 6 + 1
+    start_day = ((int(pentad) - 1) % 6) * 5
+    start_date = datetime(year, month, start_day)
+    if start_day < 25:
+        end_date = datetime(year, month, start_day + 5)
+    else:  # last week of the month
+        end_date = start_date + relativedelta(day=31)
+    dataset.set_date_of_dataset(startdate=start_date, enddate=end_date)
+
     try:
-        dataset.add_update_resources(new_resources)
+        dataset.add_update_resources(resources)
     except HDXError as ex:
+        updated = False
         logger.error(f"Resources could not be added. Error: {ex}")
-        return dataset, False
-    return dataset, True
+
+    return dataset, updated
 
 
 def summarize_data(downloader, url, boundary_dataset, dataset, countries, folder):
