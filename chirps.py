@@ -7,7 +7,7 @@ from geopandas import read_file
 from mapbox import Uploader
 from numpy import zeros
 from os.path import basename, join
-from pandas import concat
+from pandas import concat, DataFrame
 from rasterio import mask
 from rasterio import open as r_open
 from rasterio.dtypes import uint8
@@ -122,16 +122,16 @@ def summarize_data(downloader, url, subn_resources, countries, folder):
             pcode = row["properties"]["ADM_PCODE"]
             boundary_lyr.loc[
                 boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_mean"
-            ] = row["properties"]["mean"]
+            ] = round(row["properties"]["mean"], 5)
             boundary_lyr.loc[
                 boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_min"
-            ] = row["properties"]["min"]
+            ] = round(row["properties"]["min"], 5)
             boundary_lyr.loc[
                 boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_max"
-            ] = row["properties"]["max"]
+            ] = round(row["properties"]["max"], 5)
         zstats.append(boundary_lyr)
     zstats = concat(zstats)
-    zstats.drop(columns="geometry", inplace=True)
+    zstats = DataFrame(zstats.drop(columns="geometry").reset_index(drop=True))
 
     return raster, zstats
 

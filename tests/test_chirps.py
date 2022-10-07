@@ -1,6 +1,7 @@
 import pytest
 
 from os.path import join
+from pandas import read_csv, testing
 from hdx.api.configuration import Configuration
 from hdx.data.dataset import Dataset
 from hdx.utilities.path import temp_dir
@@ -10,6 +11,10 @@ from chirps import *
 
 class TestChirps:
     latest_url = "https://lala/ea_chirps_seasaccum_anom_marmay_202230_lta.zip"
+    countries = ["SOM"]
+    subn_resources = [join("tests", "fixtures", "polbnda_adm1_1m_ocha.geojson")]
+    nat_resources = join("tests", "fixtures", "wrl_polbnda_int_1m_uncs.geojson")
+    zstats = read_csv(join("tests", "fixtures", "subnational_anomaly_statistics.csv"))
 
     @pytest.fixture(scope="function")
     def configuration(self):
@@ -67,3 +72,15 @@ class TestChirps:
             "resource_type": "api",
             "url_type": "api"
         }
+
+    def test_summarize_data(self, downloader, configuration):
+        with temp_dir("TestCHIRPS", delete_on_success=True, delete_on_failure=False) as temp_folder:
+            raster, zstats = summarize_data(
+                downloader,
+                TestChirps.latest_url,
+                TestChirps.subn_resources,
+                TestChirps.countries,
+                temp_folder,
+            )
+            assert raster == join(temp_folder, "ea_chirps_seasaccum_anom_marmay_202230_lta.tif")
+            testing.assert_frame_equal(zstats, TestChirps.zstats, check_like=True, check_names=False)
