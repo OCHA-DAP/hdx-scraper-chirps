@@ -1,7 +1,8 @@
-import pytest
-
 from os.path import join
 from pandas import read_csv, testing
+from rasterio import open as r_open
+
+import pytest
 from hdx.api.configuration import Configuration
 from hdx.data.dataset import Dataset
 from hdx.utilities.path import temp_dir
@@ -13,8 +14,10 @@ class TestChirps:
     latest_url = "https://lala/ea_chirps_seasaccum_anom_marmay_202230_lta.zip"
     countries = ["SOM"]
     subn_resources = [join("tests", "fixtures", "polbnda_adm1_1m_ocha.geojson")]
-    nat_resources = join("tests", "fixtures", "wrl_polbnda_int_1m_uncs.geojson")
+    nat_resource = join("tests", "fixtures", "wrl_polbnda_int_1m_uncs.geojson")
     zstats = read_csv(join("tests", "fixtures", "subnational_anomaly_statistics.csv"))
+    raster = join("tests", "fixtures", "ea_chirps_seasaccum_anom_marmay_202230_lta.tif")
+    rendered_raster = r_open(join("tests", "fixtures", "SOM_render.tif")).read()
 
     @pytest.fixture(scope="function")
     def configuration(self):
@@ -73,7 +76,7 @@ class TestChirps:
             "url_type": "api"
         }
 
-    def test_summarize_data(self, downloader, configuration):
+    def test_summarize_data(self, downloader):
         with temp_dir("TestCHIRPS", delete_on_success=True, delete_on_failure=False) as temp_folder:
             raster, zstats = summarize_data(
                 downloader,
@@ -84,3 +87,15 @@ class TestChirps:
             )
             assert raster == join(temp_folder, "ea_chirps_seasaccum_anom_marmay_202230_lta.tif")
             testing.assert_frame_equal(zstats, TestChirps.zstats, check_like=True, check_names=False)
+
+    def test_generate_mapbox_data(self, configuration):
+        with temp_dir("TestCHIRPS", delete_on_success=True, delete_on_failure=False) as temp_folder:
+            rasters = generate_mapbox_data(
+                TestChirps.raster,
+                TestChirps.nat_resource,
+                TestChirps.countries,
+                configuration["legend"],
+                temp_folder,
+            )
+            rendered_raster = r_open(rasters[TestChirps.countries[0]]).read()
+            assert (rendered_raster == TestChirps.rendered_raster).all()
