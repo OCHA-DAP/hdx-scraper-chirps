@@ -9,7 +9,7 @@ from chirps import *
 
 
 class TestChirps:
-    latest_url = "ea_chirps_seasaccum_anom_marmay_202230_lta.zip"
+    latest_url = "https://lala/ea_chirps_seasaccum_anom_marmay_202230_lta.zip"
 
     @pytest.fixture(scope="function")
     def configuration(self):
@@ -45,8 +45,8 @@ class TestChirps:
         return Download()
 
     def test_get_latest_data(self, configuration, downloader):
-        latest_url = get_latest_data(configuration["base_url"], downloader)
-        assert latest_url == configuration["base_url"]+TestChirps.latest_url
+        latest_url = get_latest_data("https://lala/", downloader)
+        assert latest_url == TestChirps.latest_url
 
     def test_add_chirps_to_dataset(self, configuration, downloader):
         dataset = Dataset.load_from_json(join(
@@ -62,7 +62,7 @@ class TestChirps:
         assert dataset.get_resources()[0] == {
             "name": "ea_chirps_seasaccum_anom_marmay_202230_lta",
             "description": "March to May 2022 (Mar pentad 1 thru May Pentad 6) - Average(1981-2010)\nPentad: 30",
-            "url": "ea_chirps_seasaccum_anom_marmay_202230_lta.zip",
+            "url": "https://lala/ea_chirps_seasaccum_anom_marmay_202230_lta.zip",
             "format": "geotiff",
             "resource_type": "api",
             "url_type": "api"
