@@ -93,7 +93,7 @@ def add_chirps_to_dataset(dataset, latest_data, resource_desc):
     return dataset, updated
 
 
-def summarize_data(downloader, url, boundary_dataset, dataset, countries, folder):
+def summarize_data(downloader, url, boundary_dataset, countries, folder):
     path = downloader.download_file(url, folder=folder)
     with ZipFile(path, "r") as z:
         rastername = z.namelist()
@@ -134,12 +134,8 @@ def summarize_data(downloader, url, boundary_dataset, dataset, countries, folder
             zstats.append(boundary_lyr)
     zstats = concat(zstats)
     zstats.drop(columns="geometry", inplace=True)
-    zstats.to_csv(join(folder, "subnational_anomaly_statistics.csv"), index=False)
-    resources = dataset.get_resources()
-    for resource in resources:
-        if resource.get_file_type() == "csv":
-            resource.set_file_to_upload(join(folder, "subnational_anomaly_statistics.csv"))
-    return raster, dataset
+
+    return raster, zstats
 
 
 def generate_mapbox_data(raster, boundary_dataset, countries, legend, folder):

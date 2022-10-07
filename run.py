@@ -53,15 +53,21 @@ def main(
             if updated:
                 logger.info("Summarizing data subnationally")
                 boundary_dataset = Dataset.read_from_hdx(configuration["boundaries"]["dataset"])
-                raster, dataset = summarize_data(
+                raster, zstats = summarize_data(
                     downloader,
                     latest_data,
                     boundary_dataset,
-                    dataset,
                     countries,
                     temp_folder,
                 )
+
                 logger.info("Updating HDX")
+                csv_path = join(temp_folder, "subnational_anomaly_statistics.csv")
+                zstats.to_csv(csv_path, index=False)
+                resources = dataset.get_resources()
+                for resource in resources:
+                    if resource.get_file_type() == "csv":
+                        resource.set_file_to_upload(csv_path)
                 if dataset:
                     dataset.update_in_hdx(
                         hxl_update=False,
