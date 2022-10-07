@@ -19,13 +19,15 @@ from zipfile import ZipFile
 from hdx.data.dataset import Dataset
 from hdx.data.resource import Resource
 from hdx.data.hdxobject import HDXError
+from hdx.utilities.base_downloader import DownloadError
 
 logger = logging.getLogger(__name__)
 
 
 def get_latest_data(base_url, downloader):
-    response = downloader.download(base_url)
-    if response.status_code != 200:
+    try:
+        downloader.download(base_url)
+    except DownloadError:
         logger.error(f"Could not get data from {base_url}")
         return None
     latest_url = None
