@@ -16,7 +16,6 @@ from rasterstats import zonal_stats
 from time import sleep
 from zipfile import ZipFile
 
-from hdx.data.dataset import Dataset
 from hdx.data.resource import Resource
 from hdx.data.hdxobject import HDXError
 from hdx.utilities.base_downloader import DownloadError
@@ -48,9 +47,8 @@ def get_latest_data(base_url, downloader):
     return latest_url
 
 
-def add_chirps_to_dataset(dataset_name, latest_data, resource_desc):
+def add_chirps_to_dataset(dataset, latest_data, resource_desc):
     updated = False
-    dataset = Dataset.read_from_hdx(dataset_name)
     resources = [r for r in dataset.get_resources() if r.get_file_type() == "geotiff"]
     resource_name = latest_data.split("/")[-1].split(".")[0]
     if resource_name in [r["name"] for r in resources]:
@@ -105,8 +103,7 @@ def summarize_data(downloader, url, boundary_dataset, dataset, countries, folder
     except IndexError:
         logger.error("Could not extract CHIRPS data")
         return None, None
-    b_dataset = Dataset.read_from_hdx(boundary_dataset)
-    resources = b_dataset.get_resources()
+    resources = boundary_dataset.get_resources()
     zstats = []
     for resource in resources:
         if "polbnda_adm" in resource["name"]:
@@ -146,8 +143,7 @@ def summarize_data(downloader, url, boundary_dataset, dataset, countries, folder
 
 
 def generate_mapbox_data(raster, boundary_dataset, countries, legend, folder):
-    dataset = Dataset.read_from_hdx(boundary_dataset)
-    resources = dataset.get_resources()
+    resources = boundary_dataset.get_resources()
     rendered_rasters = dict()
     boundary_lyr = None
     for resource in resources:

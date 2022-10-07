@@ -4,6 +4,7 @@ from os import getenv
 from os.path import join, expanduser
 
 from hdx.api.configuration import Configuration
+from hdx.data.dataset import Dataset
 from hdx.facades.keyword_arguments import facade
 from hdx.utilities.downloader import Download
 from hdx.utilities.path import temp_dir
@@ -41,7 +42,8 @@ def main(
                 return
 
             logger.info("Generating tif resources")
-            dataset, updated = add_chirps_to_dataset(configuration["output"]["dataset"],
+            dataset = Dataset.read_from_hdx(configuration["output"]["dataset"])
+            dataset, updated = add_chirps_to_dataset(dataset,
                                                      latest_data,
                                                      configuration["output"]["resource_desc"])
 
@@ -50,10 +52,11 @@ def main(
 
             if updated:
                 logger.info("Summarizing data subnationally")
+                boundary_dataset = Dataset.read_from_hdx(configuration["boundaries"]["dataset"])
                 raster, dataset = summarize_data(
                     downloader,
                     latest_data,
-                    configuration["boundaries"]["dataset"],
+                    boundary_dataset,
                     dataset,
                     countries,
                     temp_folder,
@@ -68,7 +71,7 @@ def main(
                 logger.info("Preparing rasters for mapbox")
                 rasters = generate_mapbox_data(
                     raster,
-                    configuration["boundaries"]["dataset"],
+                    boundary_dataset,
                     countries,
                     configuration["legend"],
                     temp_folder,
