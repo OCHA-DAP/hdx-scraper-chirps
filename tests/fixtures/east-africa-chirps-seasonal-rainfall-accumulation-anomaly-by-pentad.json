@@ -1,0 +1,15 @@
+{
+"data_update_frequency": "7", 
+"dataset_date": "[2022-03-01T00:00:00 TO 2022-05-31T23:59:59]", 
+"dataset_source": "USGS, FEWS NET, CHIRPS", 
+"license_id": "cc-by",
+"license_title": "Creative Commons Attribution International",
+"license_url": "http://www.opendefinition.org/licenses/cc-by",
+"maintainer": "c25dfa2f-1682-484c-aa6c-3cc9c7be2030",
+"methodology": "Other",
+"methodology_other": "",
+"name": "east-africa-chirps-seasonal-rainfall-accumulation-anomaly-by-pentad",
+"notes": "",
+"groups": [{"name": "eth"}, {"name": "ken"}, {"name": "som"}],
+"tags": [{"name": "hazards and risk", "vocabulary_id": "b891512e-9516-4bf5-962a-7a289772a2a1"}, {"name": "rainfall - precipitation", "vocabulary_id": "b891512e-9516-4bf5-962a-7a289772a2a1"}]
+}
