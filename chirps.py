@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 from geopandas import read_file
 from mapbox import Uploader
 from numpy import zeros
-from os.path import join
+from os.path import basename, join
 from pandas import concat
 from rasterio import mask
 from rasterio import open as r_open
@@ -93,7 +93,7 @@ def add_chirps_to_dataset(dataset, latest_data, resource_desc):
     return dataset, updated
 
 
-def summarize_data(downloader, url, boundary_dataset, countries, folder):
+def summarize_data(downloader, url, subn_resources, countries, folder):
     path = downloader.download_file(url, folder=folder)
     with ZipFile(path, "r") as z:
         rastername = z.namelist()
@@ -103,49 +103,42 @@ def summarize_data(downloader, url, boundary_dataset, countries, folder):
     except IndexError:
         logger.error("Could not extract CHIRPS data")
         return None, None
-    resources = boundary_dataset.get_resources()
     zstats = []
-    for resource in resources:
-        if "polbnda_adm" in resource["name"]:
-            level = resource["name"][11]
-            _, resource_file = resource.download(folder=folder)
-            boundary_lyr = read_file(resource_file)
-            boundary_lyr = boundary_lyr[boundary_lyr["alpha_3"].isin(countries)]
-            boundary_lyr["ADM_LEVEL"] = int(level)
-            boundary_lyr["ADM_PCODE"] = boundary_lyr[f"ADM{level}_PCODE"]
-            boundary_lyr["ADM_REF"] = boundary_lyr[f"ADM{level}_REF"]
-            stats = zonal_stats(
-                vectors=boundary_lyr,
-                raster=raster,
-                stats=["mean", "min", "max"],
-                geojson_out=True,
-            )
-            for row in stats:
-                pcode = row["properties"][f"ADM{level}_PCODE"]
-                boundary_lyr.loc[
-                    boundary_lyr[f"ADM{level}_PCODE"] == pcode, "CHIRPS_mean"
-                ] = row["properties"]["mean"]
-                boundary_lyr.loc[
-                    boundary_lyr[f"ADM{level}_PCODE"] == pcode, "CHIRPS_min"
-                ] = row["properties"]["min"]
-                boundary_lyr.loc[
-                    boundary_lyr[f"ADM{level}_PCODE"] == pcode, "CHIRPS_max"
-                ] = row["properties"]["max"]
-            zstats.append(boundary_lyr)
+    for resource in subn_resources:
+        level = basename(resource)[11]
+        boundary_lyr = read_file(resource)
+        boundary_lyr = boundary_lyr[boundary_lyr["alpha_3"].isin(countries)]
+        boundary_lyr["ADM_LEVEL"] = int(level)
+        boundary_lyr["ADM_PCODE"] = boundary_lyr[f"ADM{level}_PCODE"]
+        boundary_lyr["ADM_REF"] = boundary_lyr[f"ADM{level}_REF"]
+        boundary_lyr.sort_values(by=["ADM_PCODE"], inplace=True)
+        stats = zonal_stats(
+            vectors=boundary_lyr,
+            raster=raster,
+            stats=["mean", "min", "max"],
+            geojson_out=True,
+        )
+        for row in stats:
+            pcode = row["properties"]["ADM_PCODE"]
+            boundary_lyr.loc[
+                boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_mean"
+            ] = row["properties"]["mean"]
+            boundary_lyr.loc[
+                boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_min"
+            ] = row["properties"]["min"]
+            boundary_lyr.loc[
+                boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_max"
+            ] = row["properties"]["max"]
+        zstats.append(boundary_lyr)
     zstats = concat(zstats)
     zstats.drop(columns="geometry", inplace=True)
 
     return raster, zstats
 
 
-def generate_mapbox_data(raster, boundary_dataset, countries, legend, folder):
-    resources = boundary_dataset.get_resources()
+def generate_mapbox_data(raster, boundary_file, countries, legend, folder):
     rendered_rasters = dict()
-    boundary_lyr = None
-    for resource in resources:
-        if "wrl_polbnda_int_1m" in resource["name"]:
-            _, resource_file = resource.download(folder=folder)
-            boundary_lyr = read_file(resource_file)
+    boundary_lyr = read_file(boundary_file)
     open_raster = r_open(raster)
     for country in countries:
         clip_raster = join(folder, f"{country}_clip.tif")

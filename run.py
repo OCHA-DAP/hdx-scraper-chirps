@@ -51,12 +51,24 @@ def main(
                 logger.info("No new data found, will try again tomorrow")
                 return
 
-            logger.info("Summarizing data subnationally")
+            logger.info("Downloading international boundaries")
             boundary_dataset = Dataset.read_from_hdx(configuration["boundaries"]["dataset"])
+            boundary_resources = boundary_dataset.get_resources()
+            subn_resources = []
+            nat_resource = None
+            for resource in boundary_resources:
+                if "polbnda_adm" in resource["name"]:
+                    _, resource_file = resource.download(folder=temp_folder)
+                    subn_resources.append(resource_file)
+                if "wrl_polbnda_int_1m" in resource["name"]:
+                    _, resource_file = resource.download(folder=temp_folder)
+                    nat_resource = resource_file
+
+            logger.info("Summarizing data subnationally")
             raster, zstats = summarize_data(
                 downloader,
                 latest_data,
-                boundary_dataset,
+                subn_resources,
                 countries,
                 temp_folder,
             )
@@ -77,7 +89,7 @@ def main(
             logger.info("Preparing rasters for mapbox")
             rasters = generate_mapbox_data(
                 raster,
-                boundary_dataset,
+                nat_resource,
                 countries,
                 configuration["legend"],
                 temp_folder,
