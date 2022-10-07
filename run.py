@@ -49,48 +49,48 @@ def main(
 
             if not updated:
                 logger.info("No new data found, will try again tomorrow")
+                return
 
-            if updated:
-                logger.info("Summarizing data subnationally")
-                boundary_dataset = Dataset.read_from_hdx(configuration["boundaries"]["dataset"])
-                raster, zstats = summarize_data(
-                    downloader,
-                    latest_data,
-                    boundary_dataset,
-                    countries,
-                    temp_folder,
+            logger.info("Summarizing data subnationally")
+            boundary_dataset = Dataset.read_from_hdx(configuration["boundaries"]["dataset"])
+            raster, zstats = summarize_data(
+                downloader,
+                latest_data,
+                boundary_dataset,
+                countries,
+                temp_folder,
+            )
+
+            logger.info("Updating HDX")
+            csv_path = join(temp_folder, "subnational_anomaly_statistics.csv")
+            zstats.to_csv(csv_path, index=False)
+            resources = dataset.get_resources()
+            for resource in resources:
+                if resource.get_file_type() == "csv":
+                    resource.set_file_to_upload(csv_path)
+            if dataset:
+                dataset.update_in_hdx(
+                    hxl_update=False,
+                    updated_by_script="HDX Scraper: CHIRPS",
                 )
 
-                logger.info("Updating HDX")
-                csv_path = join(temp_folder, "subnational_anomaly_statistics.csv")
-                zstats.to_csv(csv_path, index=False)
-                resources = dataset.get_resources()
-                for resource in resources:
-                    if resource.get_file_type() == "csv":
-                        resource.set_file_to_upload(csv_path)
-                if dataset:
-                    dataset.update_in_hdx(
-                        hxl_update=False,
-                        updated_by_script="HDX Scraper: CHIRPS",
-                    )
+            logger.info("Preparing rasters for mapbox")
+            rasters = generate_mapbox_data(
+                raster,
+                boundary_dataset,
+                countries,
+                configuration["legend"],
+                temp_folder,
+            )
 
-                logger.info("Preparing rasters for mapbox")
-                rasters = generate_mapbox_data(
-                    raster,
-                    boundary_dataset,
-                    countries,
-                    configuration["legend"],
-                    temp_folder,
+            logger.info("Uploading rasters to mapbox")
+            for country in rasters:
+                upload_to_mapbox(
+                    configuration["output"]["mapbox"][country]["mapid"],
+                    configuration["output"]["mapbox"][country]["name"],
+                    rasters[country],
+                    mapbox_key,
                 )
-
-                logger.info("Uploading rasters to mapbox")
-                for country in rasters:
-                    upload_to_mapbox(
-                        configuration["output"]["mapbox"][country]["mapid"],
-                        configuration["output"]["mapbox"][country]["name"],
-                        rasters[country],
-                        mapbox_key,
-                    )
 
 
 if __name__ == "__main__":
