@@ -65,7 +65,8 @@ class TestChirps:
             TestChirps.latest_url,
             "March to May 2022 (Mar pentad 1 thru May Pentad 6) - Average(1981-2010)\nPentad: ")
         dataset.get_date_of_dataset()
-        assert dataset["dataset_date"] == "[2022-05-25T00:00:00 TO 2022-05-31T00:00:00]"
+        assert dataset["dataset_date"] in ["[2022-05-25T00:00:00 TO 2022-05-31T00:00:00]",
+                                           "[2022-05-25T00:00:00 TO 2022-05-31T23:59:59]"]
         assert updated is True
         assert dataset.get_resources()[0] == {
             "name": "ea_chirps_seasaccum_anom_marmay_202230_lta",
