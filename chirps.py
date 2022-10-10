@@ -121,15 +121,18 @@ def summarize_data(downloader, url, subn_resources, countries, folder):
         )
         for row in stats:
             pcode = row["properties"]["ADM_PCODE"]
-            boundary_lyr.loc[boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_mean"] = round(
-                row["properties"]["mean"], 5
-            )
-            boundary_lyr.loc[boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_min"] = round(
-                row["properties"]["min"], 5
-            )
-            boundary_lyr.loc[boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_max"] = round(
-                row["properties"]["max"], 5
-            )
+            if row["properties"]["mean"]:
+                boundary_lyr.loc[boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_mean"] = round(
+                    row["properties"]["mean"], 5
+                )
+            if row["properties"]["min"]:
+                boundary_lyr.loc[boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_min"] = round(
+                    row["properties"]["min"], 5
+                )
+            if row["properties"]["max"]:
+                boundary_lyr.loc[boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_max"] = round(
+                    row["properties"]["max"], 5
+                )
         zstats.append(boundary_lyr)
     zstats = concat(zstats)
     zstats = DataFrame(zstats.drop(columns="geometry").reset_index(drop=True))
