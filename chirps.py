@@ -29,20 +29,21 @@ def get_latest_data(base_url, downloader):
     except DownloadError:
         logger.error(f"Could not get data from {base_url}")
         return None
-    latest_url = None
+    latest_file = None
     soup = BeautifulSoup(downloader.get_text(), "html.parser")
     lines = soup.find_all("a")
     for line in lines:
         filename = line.get("href")
         if filename[-3:] != "zip":
             continue
-        if not latest_url:
-            latest_url = filename
+        if not latest_file:
+            latest_file = filename
             continue
-        latest_date = int(latest_url.split("/")[-1].split("_")[5])
+        latest_date = int(latest_file.split("_")[5])
         filedate = int(filename.split("_")[5])
         if filedate > latest_date:
-            latest_url = f"{base_url}{filename}"
+            latest_file = filename
+    latest_url = f"{base_url}{filename}"
 
     return latest_url
 
