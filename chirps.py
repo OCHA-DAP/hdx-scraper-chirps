@@ -7,7 +7,7 @@ from geopandas import read_file
 from mapbox import Uploader
 from numpy import zeros
 from os.path import basename, join
-from pandas import concat, DataFrame
+from pandas import DataFrame, concat
 from rasterio import mask
 from rasterio import open as r_open
 from rasterio.dtypes import uint8
@@ -16,8 +16,8 @@ from rasterstats import zonal_stats
 from time import sleep
 from zipfile import ZipFile
 
-from hdx.data.resource import Resource
 from hdx.data.hdxobject import HDXError
+from hdx.data.resource import Resource
 from hdx.utilities.base_downloader import DownloadError
 
 logger = logging.getLogger(__name__)
@@ -76,16 +76,16 @@ def add_chirps_to_dataset(dataset, latest_data, resource_desc):
 
     year = int(resource_name.split("_")[-2][:-2])
     month = (int(pentad) - 1) // 6 + 1
-    start_day = ((int(pentad) - 1) % 6) * 5
+    start_day = ((int(pentad) - 1) % 6) * 5 + 1
     start_date = datetime(year, month, start_day)
     if start_day < 25:
-        end_date = datetime(year, month, start_day + 5)
+        end_date = datetime(year, month, start_day + 4)
     else:  # last week of the month
         end_date = start_date + relativedelta(day=31)
     dataset.set_date_of_dataset(startdate=start_date, enddate=end_date)
 
     try:
-        dataset.add_update_resources(resources)
+        dataset.add_update_resources(resources, ignore_datasetid=True)
     except HDXError as ex:
         updated = False
         logger.error(f"Resources could not be added. Error: {ex}")
@@ -120,15 +120,15 @@ def summarize_data(downloader, url, subn_resources, countries, folder):
         )
         for row in stats:
             pcode = row["properties"]["ADM_PCODE"]
-            boundary_lyr.loc[
-                boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_mean"
-            ] = round(row["properties"]["mean"], 5)
-            boundary_lyr.loc[
-                boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_min"
-            ] = round(row["properties"]["min"], 5)
-            boundary_lyr.loc[
-                boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_max"
-            ] = round(row["properties"]["max"], 5)
+            boundary_lyr.loc[boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_mean"] = round(
+                row["properties"]["mean"], 5
+            )
+            boundary_lyr.loc[boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_min"] = round(
+                row["properties"]["min"], 5
+            )
+            boundary_lyr.loc[boundary_lyr["ADM_PCODE"] == pcode, "CHIRPS_max"] = round(
+                row["properties"]["max"], 5
+            )
         zstats.append(boundary_lyr)
     zstats = concat(zstats)
     zstats = DataFrame(zstats.drop(columns="geometry").reset_index(drop=True))
@@ -149,42 +149,41 @@ def generate_mapbox_data(raster, boundary_file, countries, legend, folder):
         # Clip raster to country outline
         country_geom = boundary_lyr["geometry"][boundary_lyr["ISO_3"] == country]
         clipped, transform = mask.mask(open_raster, country_geom, all_touched=True, crop=True)
-        meta.update({"height": clipped.shape[1],
-                     "width": clipped.shape[2],
-                     "transform": transform})
+        meta.update({
+            "height": clipped.shape[1],
+            "width": clipped.shape[2],
+            "transform": transform,
+        })
         with r_open(clip_raster, "w", **meta) as dst:
             dst.write(clipped)
 
         # Resample raster to increase resolution
         with r_open(clip_raster) as src:
-            upscale_factor = int(round(3000/src.width, 0))
+            upscale_factor = int(round(3000 / src.width, 0))
             data = src.read(
                 out_shape=(src.count, int(src.height * upscale_factor), int(src.width * upscale_factor)),
-                resampling=Resampling.nearest
+                resampling=Resampling.nearest,
             )
             transform = src.transform * src.transform.scale(
-                (src.width / data.shape[-1]),
-                (src.height / data.shape[-2])
+                (src.width / data.shape[-1]), (src.height / data.shape[-2])
             )
-        meta.update({"height": data.shape[1],
-                     "width": data.shape[2],
-                     "transform": transform})
+        meta.update({"height": data.shape[1], "width": data.shape[2], "transform": transform})
         with r_open(resample_raster, "w", **meta) as dst:
             dst.write(data)
 
         # Render as raster with red, green, blue, alpha bands
-        color_bands = [zeros(shape=clipped.shape, dtype=uint8),
-                       zeros(shape=clipped.shape, dtype=uint8),
-                       zeros(shape=clipped.shape, dtype=uint8),
-                       zeros(shape=clipped.shape, dtype=uint8)]
+        color_bands = [
+            zeros(shape=clipped.shape, dtype=uint8),
+            zeros(shape=clipped.shape, dtype=uint8),
+            zeros(shape=clipped.shape, dtype=uint8),
+            zeros(shape=clipped.shape, dtype=uint8),
+        ]
         for color in legend:
             color_bands[0][(clipped > color["range"][0]) & (clipped <= color["range"][1])] = color["color"][0]
             color_bands[1][(clipped > color["range"][0]) & (clipped <= color["range"][1])] = color["color"][1]
             color_bands[2][(clipped > color["range"][0]) & (clipped <= color["range"][1])] = color["color"][2]
         color_bands[3][clipped > -100000] = 255
-        meta.update({"count": 4,
-                     "dtype": 'uint8',
-                     "nodata": None})
+        meta.update({"count": 4, "dtype": "uint8", "nodata": None})
         with r_open(render_raster, "w", **meta) as final:
             meta.update({"count": 1})
             for i, c in enumerate(color_bands, start=1):
@@ -199,12 +198,12 @@ def generate_mapbox_data(raster, boundary_file, countries, legend, folder):
 
 def upload_to_mapbox(mapid, name, file_to_upload, mapbox_key):
     service = Uploader(access_token=mapbox_key)
-    with open(file_to_upload, 'rb') as src:
+    with open(file_to_upload, "rb") as src:
         upload_resp = service.upload(src, mapid, name=name)
     if upload_resp.status_code == 422:
         for i in range(5):
             sleep(5)
-            with open(file_to_upload, 'rb') as src:
+            with open(file_to_upload, "rb") as src:
                 upload_resp = service.upload(src, mapid, name=name)
             if upload_resp.status_code != 422:
                 break
