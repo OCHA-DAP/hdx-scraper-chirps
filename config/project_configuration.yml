@@ -1,8 +1,8 @@
-base_url: "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/fews/web/africa/east/pentadal/chirps/seasaccum/marmay/anom/lta/downloads/pentadal/"
+base_url: "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/fews/web/africa/east/pentadal/chirps/seasaccum/octdec/anom/lta/downloads/pentadal/"
 
 output:
   dataset: "east-africa-chirps-seasonal-rainfall-accumulation-anomaly-by-pentad"
-  resource_desc: "March to May 2022 (Mar pentad 1 thru May Pentad 6) - Average(1981-2010)\nPentad: "
+  resource_desc: "October to December 2022 (Oct pentad 1 thru Dec Pentad 6) - Average(1981-2010)\nPentad: "
   mapbox:
     ETH:
       name: "eth_chirps-582ypp"
