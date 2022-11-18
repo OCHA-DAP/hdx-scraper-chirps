@@ -11,12 +11,14 @@ from chirps import *
 
 
 class TestChirps:
-    latest_url = "https://lala/ea_chirps_seasaccum_anom_marmay_202230_lta.zip"
+    season = "marmay"
+    latest_data = {season: "https://lala/ea_chirps_seasaccum_anom_marmay_202230_lta.zip"}
     countries = ["SOM"]
+    desc = {season: "March to May 2022 (Mar pentad 1 thru May Pentad 6) - Average(1981-2010)\nPentad: "}
     subn_resources = [join("tests", "fixtures", "polbnda_adm1_1m_ocha.geojson")]
     nat_resource = join("tests", "fixtures", "wrl_polbnda_int_1m_uncs.geojson")
     zstats = read_csv(join("tests", "fixtures", "subnational_anomaly_statistics.csv"))
-    raster = join("tests", "fixtures", "ea_chirps_seasaccum_anom_marmay_202230_lta.tif")
+    rasters = {season: join("tests", "fixtures", "ea_chirps_seasaccum_anom_marmay_202230_lta.tif")}
     rendered_raster = r_open(join("tests", "fixtures", "SOM_render.tif")).read()
 
     @pytest.fixture(scope="function")
@@ -54,7 +56,7 @@ class TestChirps:
 
     def test_get_latest_data(self, configuration, downloader):
         latest_url = get_latest_data("https://lala/", downloader)
-        assert latest_url == TestChirps.latest_url
+        assert latest_url == TestChirps.latest_data[TestChirps.season]
 
     def test_add_chirps_to_dataset(self, configuration, downloader):
         dataset = Dataset.load_from_json(join(
@@ -62,8 +64,8 @@ class TestChirps:
         ))
         dataset, updated = add_chirps_to_dataset(
             dataset,
-            TestChirps.latest_url,
-            "March to May 2022 (Mar pentad 1 thru May Pentad 6) - Average(1981-2010)\nPentad: ")
+            TestChirps.latest_data,
+            TestChirps.desc)
         dataset.get_date_of_dataset()
         assert dataset["dataset_date"] in ["[2022-05-26T00:00:00 TO 2022-05-31T00:00:00]",
                                            "[2022-05-26T00:00:00 TO 2022-05-31T23:59:59]"]
@@ -79,24 +81,24 @@ class TestChirps:
 
     def test_summarize_data(self, downloader):
         with temp_dir("TestCHIRPS", delete_on_success=True, delete_on_failure=False) as temp_folder:
-            raster, zstats = summarize_data(
+            rasters, zstats = summarize_data(
                 downloader,
-                TestChirps.latest_url,
+                TestChirps.latest_data,
                 TestChirps.subn_resources,
                 TestChirps.countries,
                 temp_folder,
             )
-            assert raster == join(temp_folder, "ea_chirps_seasaccum_anom_marmay_202230_lta.tif")
+            assert rasters == {TestChirps.season: join(temp_folder, "ea_chirps_seasaccum_anom_marmay_202230_lta.tif")}
             testing.assert_frame_equal(zstats, TestChirps.zstats, check_like=True, check_names=False)
 
     def test_generate_mapbox_data(self, configuration):
         with temp_dir("TestCHIRPS", delete_on_success=True, delete_on_failure=False) as temp_folder:
-            rasters = generate_mapbox_data(
-                TestChirps.raster,
+            rendered_rasters = generate_mapbox_data(
+                TestChirps.rasters,
                 TestChirps.nat_resource,
                 TestChirps.countries,
                 configuration["legend"],
                 temp_folder,
             )
-            rendered_raster = r_open(rasters[TestChirps.countries[0]]).read()
+            rendered_raster = r_open(rendered_rasters[TestChirps.countries[0]][TestChirps.season]).read()
             assert (rendered_raster == TestChirps.rendered_raster).all()
