@@ -35,10 +35,13 @@ def main(
 
     with temp_dir(folder="TempCHIRPS") as temp_folder:
         with Download(rate_limit={"calls": 1, "period": 0.1}) as downloader:
+            seasons = [s for s in configuration["base_url"]]
 
             logger.info("Finding latest available data")
-            latest_data = get_latest_data(configuration["base_url"], downloader)
-            if not latest_data:
+            latest_data = dict()
+            for season in seasons:
+                latest_data[season] = get_latest_data(configuration["base_url"][season], downloader)
+            if len(latest_data) == 0:
                 return
 
             logger.info("Generating tif resources")
@@ -65,7 +68,7 @@ def main(
                     nat_resource = resource_file
 
             logger.info("Summarizing data subnationally")
-            raster, zstats = summarize_data(
+            rasters, zstats = summarize_data(
                 downloader,
                 latest_data,
                 subn_resources,
@@ -87,8 +90,8 @@ def main(
                 )
 
             logger.info("Preparing rasters for mapbox")
-            rasters = generate_mapbox_data(
-                raster,
+            rendered_rasters = generate_mapbox_data(
+                rasters,
                 nat_resource,
                 countries,
                 configuration["legend"],
@@ -96,13 +99,14 @@ def main(
             )
 
             logger.info("Uploading rasters to mapbox")
-            for country in rasters:
-                upload_to_mapbox(
-                    configuration["output"]["mapbox"][country]["mapid"],
-                    configuration["output"]["mapbox"][country]["name"],
-                    rasters[country],
-                    mapbox_key,
-                )
+            for country in rendered_rasters:
+                for season in rendered_rasters[country]:
+                    upload_to_mapbox(
+                        configuration["output"]["mapbox"][country][season]["mapid"],
+                        configuration["output"]["mapbox"][country][season]["name"],
+                        rendered_rasters[country][season],
+                        mapbox_key,
+                    )
 
 
 if __name__ == "__main__":

@@ -1,18 +1,34 @@
-base_url: "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/fews/web/africa/east/pentadal/chirps/seasaccum/octdec/anom/lta/downloads/pentadal/"
+base_url:
+  marmay: "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/fews/web/africa/east/pentadal/chirps/seasaccum/marmay/anom/lta/downloads/pentadal/"
+  octdec: "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/fews/web/africa/east/pentadal/chirps/seasaccum/octdec/anom/lta/downloads/pentadal/"
 
 output:
   dataset: "east-africa-chirps-seasonal-rainfall-accumulation-anomaly-by-pentad"
-  resource_desc: "October to December 2022 (Oct pentad 1 thru Dec Pentad 6) - Average(1981-2010)\nPentad: "
+  resource_desc:
+    marmay: "March to May 2022 (Mar pentad 1 thru May Pentad 6) - Average(1981-2010)\nPentad: "
+    octdec: "October to December 2022 (Oct pentad 1 thru Dec Pentad 6) - Average(1981-2010)\nPentad: "
   mapbox:
     ETH:
-      name: "eth_chirps-582ypp"
-      mapid: "humdata.9f35wnzq"
+      marmay:
+        name: "eth_chirps_marmay-0kiuw3"
+        mapid: "humdata.adtgh6lr"
+      octdec:
+        name: "eth_chirps-octdec-582ypp"
+        mapid: "humdata.9f35wnzq"
     KEN:
-      name: "ken_chirps-8xn2th"
-      mapid: "humdata.0zdu5z45"
+      marmay:
+        name: "ken_chirps_marmay-588gpb"
+        mapid: "humdata.bdidwt0g"
+      octdec:
+        name: "ken_chirps-octdec-8xn2th"
+        mapid: "humdata.0zdu5z45"
     SOM:
-      name: "som_chirps-0uyngi"
-      mapid: "humdata.1bl7k2zs"
+      marmay:
+        name: "som_chirps_marmay-02azfc"
+        mapid: "humdata.7xxd10pv"
+      octdec:
+        name: "som_chirps-octdec-0uyngi"
+        mapid: "humdata.1bl7k2zs"
 
 boundaries:
   dataset: "unmap-international-boundaries-geojson"
