@@ -53,6 +53,7 @@ def add_chirps_to_dataset(dataset, latest_data, resource_desc):
     resources = [r for r in dataset.get_resources() if r.get_file_type() == "geotiff"]
     for season in latest_data:
         matching_resources = [r for r in resources if season in r["name"]]
+        matching_index = [i for i, _ in enumerate(resources) if season in resources[i]["name"]]
         resource_name = latest_data[season].split("/")[-1].split(".")[0]
         if resource_name in [r["name"] for r in matching_resources]:
             updated.append(False)
@@ -71,10 +72,9 @@ def add_chirps_to_dataset(dataset, latest_data, resource_desc):
             resources.append(Resource(resource_data))
         elif matching_resources[0]["url"] != latest_data[season]:
             updated.append(True)
-            resources[resources.index(matching_resources)]
-            resources[resources.index(matching_resources)]["name"] = resource_name
-            resources[resources.index(matching_resources)]["description"] = desc
-            resources[resources.index(matching_resources)]["url"] = latest_data[season]
+            resources[matching_index[0]]["name"] = resource_name
+            resources[matching_index[0]]["description"] = desc
+            resources[matching_index[0]]["url"] = latest_data[season]
 
     updated = any(updated)
     if not updated:
