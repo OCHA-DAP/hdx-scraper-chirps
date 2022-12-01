@@ -48,7 +48,7 @@ def get_latest_data(base_url, downloader):
     return latest_url
 
 
-def add_chirps_to_dataset(dataset, latest_data, resource_desc):
+def add_chirps_to_dataset(dataset, latest_data, resource_desc, today):
     updated = []
     resources = [r for r in dataset.get_resources() if r.get_file_type() == "geotiff"]
     for season in latest_data:
@@ -75,6 +75,7 @@ def add_chirps_to_dataset(dataset, latest_data, resource_desc):
             resources[matching_index[0]]["name"] = resource_name
             resources[matching_index[0]]["description"] = desc
             resources[matching_index[0]]["url"] = latest_data[season]
+            resources[matching_index[0]]["last_modified"] = today
 
     updated = any(updated)
     if not updated:
