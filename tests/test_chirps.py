@@ -5,7 +5,6 @@ from rasterio import open as r_open
 import pytest
 from hdx.api.configuration import Configuration
 from hdx.data.dataset import Dataset
-from hdx.utilities.dateparse import parse_date
 from hdx.utilities.path import temp_dir
 from hdx.utilities.useragent import UserAgent
 from chirps import *
@@ -66,8 +65,7 @@ class TestChirps:
         dataset, updated = add_chirps_to_dataset(
             dataset,
             TestChirps.latest_data,
-            TestChirps.desc,
-            today=parse_date("2022-11-28"))
+            TestChirps.desc)
         dataset.get_date_of_dataset()
         assert dataset["dataset_date"] in ["[2022-05-26T00:00:00 TO 2022-05-31T00:00:00]",
                                            "[2022-05-26T00:00:00 TO 2022-05-31T23:59:59]"]

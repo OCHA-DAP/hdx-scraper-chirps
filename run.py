@@ -6,7 +6,6 @@ from os.path import join, expanduser
 from hdx.api.configuration import Configuration
 from hdx.data.dataset import Dataset
 from hdx.facades.keyword_arguments import facade
-from hdx.utilities.dateparse import now_utc
 from hdx.utilities.downloader import Download
 from hdx.utilities.path import temp_dir
 from chirps import *
@@ -36,7 +35,6 @@ def main(
 
     with temp_dir(folder="TempCHIRPS") as temp_folder:
         with Download(rate_limit={"calls": 1, "period": 0.1}) as downloader:
-            today = now_utc()
             seasons = [s for s in configuration["base_url"]]
 
             logger.info("Finding latest available data")
@@ -50,8 +48,7 @@ def main(
             dataset = Dataset.read_from_hdx(configuration["output"]["dataset"])
             dataset, updated = add_chirps_to_dataset(dataset,
                                                      latest_data,
-                                                     configuration["output"]["resource_desc"],
-                                                     today)
+                                                     configuration["output"]["resource_desc"])
 
             if not updated:
                 logger.info("No new data found, will try again tomorrow")

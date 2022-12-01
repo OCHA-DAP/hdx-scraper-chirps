@@ -1,5 +1,4 @@
 hdx-python-api~=5.9.0
-hdx-python-scraper==1.9.2
 bs4~=0.0.1
 geopandas~=0.10.2
 mapbox~=0.18.0
