@@ -1,4 +1,5 @@
 import logging
+import warnings
 
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -13,6 +14,7 @@ from rasterio import open as r_open
 from rasterio.dtypes import uint8
 from rasterio.enums import Resampling
 from rasterstats import zonal_stats
+from shapely.errors import ShapelyDeprecationWarning
 from time import sleep
 from zipfile import ZipFile
 
@@ -21,6 +23,7 @@ from hdx.data.resource import Resource
 from hdx.utilities.base_downloader import DownloadError
 
 logger = logging.getLogger(__name__)
+warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
 
 
 def get_latest_data(base_url, downloader):
