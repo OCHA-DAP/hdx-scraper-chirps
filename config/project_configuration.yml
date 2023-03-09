@@ -2,6 +2,8 @@ base_url:
   marmay: "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/fews/web/africa/east/pentadal/chirps/seasaccum/marmay/anom/lta/downloads/pentadal/"
   octdec: "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/fews/web/africa/east/pentadal/chirps/seasaccum/octdec/anom/lta/downloads/pentadal/"
 
+year: 2022
+
 output:
   dataset: "east-africa-chirps-seasonal-rainfall-accumulation-anomaly-by-pentad"
   resource_desc:

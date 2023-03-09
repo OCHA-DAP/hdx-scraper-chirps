@@ -40,7 +40,11 @@ def main(
             logger.info("Finding latest available data")
             latest_data = dict()
             for season in seasons:
-                latest_data[season] = get_latest_data(configuration["base_url"][season], downloader)
+                latest_data[season] = get_latest_data(
+                    configuration["base_url"][season],
+                    downloader,
+                    configuration.get("year"),
+                )
             if len(latest_data) == 0:
                 return
 

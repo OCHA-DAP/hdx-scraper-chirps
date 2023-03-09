@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
 
 
-def get_latest_data(base_url, downloader):
+def get_latest_data(base_url, downloader, year=None):
     try:
         downloader.download(base_url)
     except DownloadError:
@@ -39,6 +39,9 @@ def get_latest_data(base_url, downloader):
         filename = line.get("href")
         if filename[-3:] != "zip":
             continue
+        fileyear = filename.split("_")[5][:4]
+        if year and fileyear != str(year):
+            continue
         if not latest_file:
             latest_file = filename
             continue
@@ -46,7 +49,7 @@ def get_latest_data(base_url, downloader):
         filedate = int(filename.split("_")[5])
         if filedate > latest_date:
             latest_file = filename
-    latest_url = f"{base_url}{filename}"
+    latest_url = f"{base_url}{latest_file}"
 
     return latest_url
 
