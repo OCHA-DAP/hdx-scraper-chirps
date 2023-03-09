@@ -66,7 +66,7 @@ class TestChirps:
             dataset,
             TestChirps.latest_data,
             TestChirps.desc)
-        dataset.get_date_of_dataset()
+        dataset.get_reference_period()
         assert dataset["dataset_date"] in ["[2022-05-26T00:00:00 TO 2022-05-31T00:00:00]",
                                            "[2022-05-26T00:00:00 TO 2022-05-31T23:59:59]"]
         assert updated is True

@@ -94,7 +94,7 @@ def add_chirps_to_dataset(dataset, latest_data, resource_desc):
             end_date = start_date + relativedelta(day=31)
         start_dates.append(start_date)
         end_dates.append(end_date)
-    dataset.set_date_of_dataset(startdate=min(start_dates), enddate=max(end_dates))
+    dataset.set_reference_period(startdate=min(start_dates), enddate=max(end_dates))
 
     try:
         dataset.add_update_resources(resources, ignore_datasetid=True)
