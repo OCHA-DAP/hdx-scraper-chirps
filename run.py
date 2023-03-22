@@ -43,7 +43,7 @@ def main(
                 latest_data[season] = get_latest_data(
                     configuration["base_url"][season],
                     downloader,
-                    configuration.get("year"),
+                    configuration.get("exclude_year"),
                 )
             if len(latest_data) == 0:
                 return
