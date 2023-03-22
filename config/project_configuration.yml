@@ -7,8 +7,8 @@ exclude_year:
 output:
   dataset: "east-africa-chirps-seasonal-rainfall-accumulation-anomaly-by-pentad"
   resource_desc:
-    marmay: "March to May 2022 (Mar pentad 1 thru May Pentad 6) - Average(1981-2010)\nPentad: "
-    octdec: "October to December 2022 (Oct pentad 1 thru Dec Pentad 6) - Average(1981-2010)\nPentad: "
+    marmay: "March to May YYYY (Mar pentad 1 thru May Pentad 6) - Average(1981-2010)\nPentad: "
+    octdec: "October to December YYYY (Oct pentad 1 thru Dec Pentad 6) - Average(1981-2010)\nPentad: "
   mapbox:
     ETH:
       marmay:

@@ -65,7 +65,8 @@ def add_chirps_to_dataset(dataset, latest_data, resource_desc):
             updated.append(False)
             continue
         pentad = resource_name.split("_")[-2][-2:]
-        desc = resource_desc[season] + pentad
+        resource_year = resource_name.split("_")[5][:4]
+        desc = resource_desc[season].replace("YYYY", resource_year) + pentad
 
         if len(matching_resources) == 0:
             updated.append(True)
