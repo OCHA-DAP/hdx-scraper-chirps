@@ -219,7 +219,10 @@ def generate_mapbox_data(rasters, boundary_file, countries, legend, folder):
                         dst.write(c)
                     with r_open(color_raster) as src:
                         final.write_band(i, src.read(1))
-            rendered_rasters[country] = {season: render_raster}
+            if country in rendered_rasters:
+                rendered_rasters[country][season] = render_raster
+            else:
+                rendered_rasters[country] = {season: render_raster}
     return rendered_rasters
 
 
