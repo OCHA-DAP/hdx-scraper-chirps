@@ -17,9 +17,6 @@ lookup = "hdx-scraper-chirps"
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-hk", "--hdx_key", default=None, help="HDX api key")
-    parser.add_argument("-ua", "--user_agent", default=None, help="user agent")
-    parser.add_argument("-pp", "--preprefix", default=None, help="preprefix")
     parser.add_argument("-hs", "--hdx_site", default=None, help="HDX site to use")
     parser.add_argument("-mk", "--mapbox_key", default=None, help="Credentials for accessing MapBox data")
     args = parser.parse_args()
@@ -115,26 +112,14 @@ def main(
 
 if __name__ == "__main__":
     args = parse_args()
-    hdx_key = args.hdx_key
-    if hdx_key is None:
-        hdx_key = getenv("HDX_KEY")
-    user_agent = args.user_agent
-    if user_agent is None:
-        user_agent = getenv("USER_AGENT")
-    preprefix = args.preprefix
-    if preprefix is None:
-        preprefix = getenv("PREPREFIX")
     mapbox_key = args.mapbox_key
     if mapbox_key is None:
         mapbox_key = getenv("MAPBOX_KEY", None)
     facade(
         main,
-        hdx_key=hdx_key,
         hdx_site="prod",
-        user_agent=user_agent,
         user_agent_config_yaml=join(expanduser("~"), ".useragents.yml"),
         user_agent_lookup=lookup,
-        preprefix=preprefix,
         project_config_yaml=join("config", "project_configuration.yml"),
         mapbox_key=mapbox_key,
     )
