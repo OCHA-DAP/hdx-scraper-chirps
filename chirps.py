@@ -5,17 +5,10 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from geopandas import read_file
-from mapbox import Uploader
-from numpy import zeros
 from os.path import basename, join
 from pandas import DataFrame, concat
-from rasterio import mask
-from rasterio import open as r_open
-from rasterio.dtypes import uint8
-from rasterio.enums import Resampling
 from rasterstats import zonal_stats
 from shapely.errors import ShapelyDeprecationWarning
-from time import sleep
 from zipfile import ZipFile
 
 from hdx.data.hdxobject import HDXError
@@ -161,83 +154,3 @@ def summarize_data(downloader, latest_data, subn_resources, countries, folder):
 
     return rasters, zstats
 
-
-def generate_mapbox_data(rasters, boundary_file, countries, legend, folder):
-    rendered_rasters = dict()
-    boundary_lyr = read_file(boundary_file)
-    for season in rasters:
-        open_raster = r_open(rasters[season])
-        for country in countries:
-            clip_raster = join(folder, f"{country}_{season}_clip.tif")
-            resample_raster = join(folder, f"{country}_{season}_resample.tif")
-            render_raster = join(folder, f"{country}_{season}_render.tif")
-            meta = open_raster.meta
-
-            # Clip raster to country outline
-            country_geom = boundary_lyr["geometry"][boundary_lyr["ISO_3"] == country]
-            clipped, transform = mask.mask(open_raster, country_geom, all_touched=True, crop=True)
-            meta.update({
-                "height": clipped.shape[1],
-                "width": clipped.shape[2],
-                "transform": transform,
-            })
-            with r_open(clip_raster, "w", **meta) as dst:
-                dst.write(clipped)
-
-            # Resample raster to increase resolution
-            with r_open(clip_raster) as src:
-                upscale_factor = int(round(3000 / src.width, 0))
-                data = src.read(
-                    out_shape=(src.count, int(src.height * upscale_factor), int(src.width * upscale_factor)),
-                    resampling=Resampling.nearest,
-                )
-                transform = src.transform * src.transform.scale(
-                    (src.width / data.shape[-1]), (src.height / data.shape[-2])
-                )
-            meta.update({"height": data.shape[1], "width": data.shape[2], "transform": transform})
-            with r_open(resample_raster, "w", **meta) as dst:
-                dst.write(data)
-
-            # Render as raster with red, green, blue, alpha bands
-            color_bands = [
-                zeros(shape=clipped.shape, dtype=uint8),
-                zeros(shape=clipped.shape, dtype=uint8),
-                zeros(shape=clipped.shape, dtype=uint8),
-                zeros(shape=clipped.shape, dtype=uint8),
-            ]
-            for color in legend:
-                color_bands[0][(clipped > color["range"][0]) & (clipped <= color["range"][1])] = color["color"][0]
-                color_bands[1][(clipped > color["range"][0]) & (clipped <= color["range"][1])] = color["color"][1]
-                color_bands[2][(clipped > color["range"][0]) & (clipped <= color["range"][1])] = color["color"][2]
-            color_bands[3][clipped > -100000] = 255
-            meta.update({"count": 4, "dtype": "uint8", "nodata": None})
-            with r_open(render_raster, "w", **meta) as final:
-                meta.update({"count": 1})
-                for i, c in enumerate(color_bands, start=1):
-                    color_raster = join(folder, f"{country}_{season}_color.tif")
-                    with r_open(color_raster, "w", **meta) as dst:
-                        dst.write(c)
-                    with r_open(color_raster) as src:
-                        final.write_band(i, src.read(1))
-            if country in rendered_rasters:
-                rendered_rasters[country][season] = render_raster
-            else:
-                rendered_rasters[country] = {season: render_raster}
-    return rendered_rasters
-
-
-def upload_to_mapbox(mapid, name, file_to_upload, mapbox_key):
-    service = Uploader(access_token=mapbox_key)
-    with open(file_to_upload, "rb") as src:
-        upload_resp = service.upload(src, mapid, name=name)
-    if upload_resp.status_code == 422:
-        for i in range(5):
-            sleep(5)
-            with open(file_to_upload, "rb") as src:
-                upload_resp = service.upload(src, mapid, name=name)
-            if upload_resp.status_code != 422:
-                break
-    if upload_resp.status_code == 422:
-        logger.error(f"Could not upload {name}")
-        return None
-    return mapid

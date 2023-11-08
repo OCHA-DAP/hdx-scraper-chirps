@@ -32,7 +32,6 @@ jobs:
         HDX_KEY: ${{ secrets.HDX_KEY }}
         USER_AGENT: ${{ secrets.USER_AGENT }}
         PREPREFIX: ${{ secrets.PREPREFIX }}
-        MAPBOX_KEY: ${{ secrets.MAPBOX_KEY }}
       run: |
         python run.py
     - name: Send mail
