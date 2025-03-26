@@ -1,3 +1,5 @@
+## DEPRECATED - visualization this fed into was retired
+
 ### Collector for CHIRPS dataset
 [![Build Status](https://github.com/OCHA-DAP/hdx-scraper-chirps/workflows/build/badge.svg)](https://github.com/OCHA-DAP/hdx-scraper-chirps/actions?query=workflow%3Abuild) [![Coverage Status](https://coveralls.io/repos/github/OCHA-DAP/hdx-scraper-chirps/badge.svg?branch=main)](https://coveralls.io/github/OCHA-DAP/hdx-scraper-chirps?branch=main)
 
